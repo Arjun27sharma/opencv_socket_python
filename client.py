@@ -6,7 +6,7 @@ if camera == True:
 else:
 	vid = cv2.VideoCapture('videos/mario.mp4')
 client_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-host_ip = '192.168.198.208' # Here according to your server ip write the address
+host_ip = '34.131.254.92' # Here according to your server ip write the address
 
 i = 9999
 port = i

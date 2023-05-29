@@ -14,7 +14,7 @@ mp_pose = mp.solutions.pose
 pose_detector = mp_pose.Pose(min_detection_confidence=0.55, min_tracking_confidence=0.55)
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-host_ip = "192.168.198.208" # put your host IP address here
+host_ip = "34.131.254.92" # put your host IP address here
 print('HOST IP:', host_ip)
 port = 9999
 socket_address = (host_ip, port)
