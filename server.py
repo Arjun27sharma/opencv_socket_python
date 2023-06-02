@@ -3,7 +3,6 @@ import cv2
 import pickle
 import struct
 import threading
-import pyshine as ps
 import cv2
 import imutils
 import numpy as np
@@ -14,7 +13,7 @@ mp_pose = mp.solutions.pose
 pose_detector = mp_pose.Pose(min_detection_confidence=0.55, min_tracking_confidence=0.55)
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-host_ip = "34.131.254.92" # put your host IP address here
+host_ip = "192.168.0.137" # put your host IP address here
 print('HOST IP:', host_ip)
 port = 9999
 socket_address = (host_ip, port)
@@ -24,17 +23,6 @@ print("Listening at", socket_address)
 
 
 def calculate_angle(a, b, c):
-    """
-    Calculates the angle between three points in a 2D plane.
-    :param a: A tuple or list containing the (x,y) coordinates of the first point.
-    :type a: tuple or list of int or float
-    :param b: A tuple or list containing the (x,y) coordinates of the second point.
-    :type b: tuple or list of int or float
-    :param c: A tuple or list containing the (x,y) coordinates of the third point.
-    :type c: tuple or list of int or float
-    :return: The angle in degrees between the line segments connecting point a to b and point b to c.
-    :rtype: float
-    """
     a = np.array(a)  # First
     b = np.array(b)  # Second
     c = np.array(c)  # Third
@@ -73,20 +61,10 @@ def detect_shoulder_angle(frame):
         # Calculate shoulder-elbow angle
         shoulder_elbow_angle = calculate_angle(shoulder, elbow, wrist)
 
-        # Visualize the angle
-        cv2.putText(image, str(shoulder_elbow_angle),
-                    tuple(np.multiply(elbow, [frame.shape[1], frame.shape[0]]).astype(int)),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2, cv2.LINE_AA)
 
 
         if(shoulder_elbow_angle < 90):
             print("angle less than 90")
-
-
-
-
-
-
 
         return image
 
@@ -102,7 +80,7 @@ def show_client(addr, client_socket):
             payload_size = struct.calcsize("Q")
             while True:
                 while len(data) < payload_size:
-                    packet = client_socket.recv(4 * 1024)  # 4K
+                    packet = client_socket.recv(1024)  # 4K
                     if not packet:
                         break
                     data += packet
@@ -111,15 +89,14 @@ def show_client(addr, client_socket):
                 msg_size = struct.unpack("Q", packed_msg_size)[0]
 
                 while len(data) < msg_size:
-                    data += client_socket.recv(4 * 1024)
+                    data += client_socket.recv(1024)
                 frame_data = data[:msg_size]
                 data = data[msg_size:]
                 frame = pickle.loads(frame_data)
-                text = f"CLIENT: {addr}"
-                frame = ps.putBText(frame, text, 10, 10, vspace=10, hspace=1, font_scale=0.7,
-                                    background_RGB=(255, 0, 0), text_RGB=(255, 250, 250))
+
                 frame = detect_shoulder_angle(frame)  # Perform shoulder form tracking on the frame
-                cv2.imshow(f"FROM {addr}", frame)
+
+                # cv2.imshow(f"FROM {addr}", frame)
                 key = cv2.waitKey(1) & 0xFF
                 if key == ord('q'):
                     break
