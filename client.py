@@ -16,6 +16,7 @@ if client_socket:
 	while (vid.isOpened()):
 		try:
 			img, frame = vid.read()
+			frame = cv2.flip(frame, 1)
 			frame = imutils.resize(frame,width=380)
 			a = pickle.dumps(frame)
 			message = struct.pack("Q",len(a))+a
