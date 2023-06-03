@@ -8,6 +8,9 @@ import imutils
 import numpy as np
 import mediapipe as mp
 from flask import Flask, jsonify
+import base64
+
+frame = None  # Global variable to hold the frame from the client
 
 app = Flask(__name__)
 
@@ -73,6 +76,9 @@ def detect_shoulder_angle(frame):
         return frame
 
 
+
+
+
 def show_client(addr, client_socket):
     try:
         print('CLIENT {} CONNECTED!'.format(addr))
@@ -95,12 +101,24 @@ def show_client(addr, client_socket):
                 data = data[msg_size:]
                 frame = pickle.loads(frame_data)
 
-                frame = detect_shoulder_angle(frame)  # Perform shoulder form tracking on the frame
+                global frame  # Update the global frame variable
 
-                # cv2.imshow(f"FROM {addr}", frame)
-                key = cv2.waitKey(1) & 0xFF
-                if key == ord('q'):
-                    break
+                frame = base64.b64encode(frame).decode('utf-8')  # Encode the frame as base64 string
+
+                frame = pickle.loads(frame)
+
+                frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)  # Convert the frame back to OpenCV format
+
+                # Perform shoulder form tracking on the frame
+                angle = detect_shoulder_angle(frame)
+
+                if angle < 90:
+                    message = "Shoulder angle is less than 90 degrees."
+                else:
+                    message = "Shoulder angle is greater than or equal to 90 degrees."
+
+                print(message)
+
             client_socket.close()
     except Exception as e:
         print(f"CLIENT {addr} DISCONNECTED")
@@ -109,14 +127,18 @@ def show_client(addr, client_socket):
 
 @app.route("/shoulder-angle", methods=["GET"])
 def get_shoulder_angle():
-    # Perform shoulder form tracking on a sample frame
-    sample_frame = cv2.imread("sample_frame.jpg")  # Replace "sample_frame.jpg" with your actual frame
+    if frame is not None:
+        # Perform shoulder form tracking on the received frame
+        angle = detect_shoulder_angle(frame)
 
-    angle = detect_shoulder_angle(sample_frame)
-    if angle < 90:
-        return jsonify({"message": "Shoulder angle is less than 90 degrees."})
+        if angle < 90:
+            message = "Shoulder angle is less than 90 degrees."
+        else:
+            message = "Shoulder angle is greater than or equal to 90 degrees."
+
+        return message
     else:
-        return jsonify({"message": "Shoulder angle is greater than or equal to 90 degrees."})
+        return "No frame received yet"
 
 
 if __name__ == "__main__":
