@@ -63,8 +63,8 @@ def detect_shoulder_angle(frame):
 
 
 
-        if(shoulder_elbow_angle < 90):
-            print("angle less than 90")
+        if(shoulder_elbow_angle < 80):
+            print("Wrong")
 
         return image
 
